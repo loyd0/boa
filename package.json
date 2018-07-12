@@ -1,0 +1,21 @@
+{
+  "name": "boa",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:loyd0/boa.git",
+  "author": "loyd0 <samloyd@hotmail.co.uk>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^7.0.1",
+    "gulp-clean-css": "^3.9.4",
+    "gulp-sass": "^4.0.1",
+    "gulp-uglify": "^3.0.0",
+    "gulp-webserver": "^0.9.1",
+    "node-sass": "^4.9.0",
+    "pump": "^3.0.0"
+  },
+  "dependencies": {}
+}
