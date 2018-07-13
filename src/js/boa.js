@@ -17,36 +17,60 @@ function getBoa() {
 }
 
 
+const Boa = function() {
+    this.elements = [];
+    this.regexes = {
+        attrRegex: new RegExp(/(([\w\-]+)(?:= ?)([\w\-\.\/\:\; ]+)(?:|))/, 'g'),
+    };
+    // this.constructor = constructor;
+    // this.attach = attach
+    // this.validate = validate
+};
 
-const boa = {
-    constructor: function(tag, attributes) {
-        console.log(validate([tag, "string"], [attributes, "string"]));
-        if (validate([tag, "string"], [attributes, "string"])) {
-            let element = createHTMLTag(tag);
-            let elementAttributes = identifyAttr(attributes, regexes);
-            console.log(elementAttributes);
-            Object.keys(elementAttributes).forEach((attr) => {
-                element.setAttribute(attr, elementAttributes[attr]);
-            });
-            console.log(element);
-            
-        }
+
+Boa.prototype.constructor = function(tag, attributes, content = "") {
+    if (this.validate([tag, "string"], [attributes, "string"], [content, "string"])) {
+        let element = this.createHTMLTag(tag);
+        let elementAttributes = this.identifyAttr(attributes);
+        let htmlContent = this.createContent(content);
+        // console.log(htmlContent);
+        Object.keys(elementAttributes).forEach((attr) => {
+            element.setAttribute(attr, elementAttributes[attr]);
+        });
+        element.append(htmlContent);
+
+        // Probably need to make this into an array for parralels.
+        this.elements.push(this.createElementObject(tag, elementAttributes, content, element));
+        // console.log(elementObject);
+        return this;
     }
-}
+};
 
 
-function validate(...args) {
+
+Boa.prototype.createElementObject = function(tag, elementAttributes, content, html) {
+    return {
+        tag: tag,
+        attributes: elementAttributes,
+        content: content,
+        html: html
+    };
+};
+Boa.prototype.createContent = function(content) {
+    return document.createTextNode(content);
+};
+Boa.prototype.validate = function(...args) {
 
 
-    const argumentsToValidate = args.length;
+    let argumentsToValidate = args.length;
     let argumentsValidated = 0;
 
-    const invalid = args.filter(arg => typeof arg[0] != arg[1]);
+    let invalidArgs = args.filter(arg => typeof arg[0] != arg[1]);
 
-    if (invalid.length === 0) {
+    if (invalidArgs.length === 0) {
         return true;
     } else {
-       errorLog(`Error: Arguments given to constructor must be strings \n\n${invalid[0][0]} is not a ${invalid[0][0]}`);
+        this.errorLog(`Error: Arguments given to constructor must be strings \n\n${invalidArgs[0][0]} is not a ${invalidArgs[0][1]}`);
     }
     //   args.forEach(function(arg, index) {
     //         if (typeof arg[0] == arg[1]) {
@@ -62,22 +86,22 @@ function validate(...args) {
     //             return false;
     //         }
     //     });
-}
+};
 
-function errorLog(error) {
+Boa.prototype.errorlog = function(error) {
     return console.log(error);
-}
+};
 
 
 // Tag creator function
-function createHTMLTag(tag) {
+Boa.prototype.createHTMLTag = function(tag) {
     return document.createElement(tag);
-}
+};
 
-function identifyAttr(string, regexes) {
+Boa.prototype.identifyAttr = function(string) {
     let attributes = {};
 
-    let regex = regexes.attrRegex;
+    let regex = this.regexes.attrRegex;
 
     // Test to see if there are Attributes in the string
     if (regex.test(string)) {
@@ -99,20 +123,23 @@ function identifyAttr(string, regexes) {
     console.log(attributes);
     // Returns attributes object or false 
     return attributes;
+};
+
+
+// Adds a child to the element
+Boa.prototype.add = function() {
+
 }
-
-
-// Regex Function to Parse Creation Strings
-const regexes = {
-    'attrRegex': RegExp(/(([\w\-]+)(?:= ?)([\w\-\.\/\:\; ]+)(?:|))/, 'g'),
-}
-
 // identifyAttr("class=test; testing=class", regexes);
-identifyAttr("class=test biggerTest class-names-snaked| id=uniqueID| src=..path/o/to|", regexes);
+// identifyAttr("class=test biggerTest class-names-snaked| id=uniqueID| src=..path/o/to|", regexes);
 // identifyAttr("no attributes", regexes);
 
 // Child Functionality 
-boa.constructor('div', 'class=ThisIsAclass this-another-class| id=iIF|');
+const boa = new Boa;
+const p = boa.constructor('p', 'class=ThisIsAclass this-another-class| id=iIF|', 'TEST');
+
+console.dir(p);
+
 // Parallel element functionality 
 
 // Content adding to created elements
