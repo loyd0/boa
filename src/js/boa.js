@@ -1,3 +1,7 @@
+/* jshint esversion: 6 */
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
+/*global define */
+
 "use strict";
 
 // Boa class object
@@ -43,6 +47,7 @@ class Boa {
 
         // Catch all the reports to present at the end
         this.reports = [];
+
     }
 
     // Nests the element as a child of the previous element
@@ -52,14 +57,14 @@ class Boa {
         this.nextChild = true; // Used to indicate going down and separate from going up
         this.levelChange = true; // The level has changed, so toggled on
         return this; // Return the class to allow chaining of elements
-    };
+    }
 
     // Nests the following element as a sibling of the previous elements parent
     get up() {
         this.treeLevel = this.treeLevel - 1; // Reduces the tree level as rising up
         this.levelChange = true; // The level has changed, so toggling on
         return this;
-    };
+    }
 
     // Creates a sibling with the new element to the preceding element
     get para() {
@@ -101,13 +106,18 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
         // Add the text node into the element
         element.append(htmlContent);
 
-        // Create the Boa element object from all the information that has been passed to it 
+        // Create the Boa element object from all the information that has been passed to it
         var elementObject = this.createElementObject(tag, elementAttributes, content, element);
 
         // ShowConstruction reports
         this.report('--------------------NEW ELEMENT------------------------');
         this.report('Element created:', elementObject);
         this.report('Element depth level:', this.treeLevel);
+
+
+        //  Setting the lastElementParent No matter what
+        // this.lastElementParent = this.elements[this.elements.length - 1];
+
 
         // Functional logic of where to place the element in relation to the previous element
         if (this.treeLevel > 0 && this.nextChild) {
@@ -194,8 +204,13 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
         } else if (!this.levelChange && !this.nextChild && this.treeLevel > 0) {
             // ShowConstruction Report
             this.report("Nesting as sibling of element:", elementObject.tag);
+            this.report("Using this parent to nest as sibling:", this.lastElementParent);
+            console.log("last element parent", this.lastElementParent);
 
-            this.applyElements(this.lastElementParent.children, elementObject); // Add elements to the parent
+            // Tracking parents here
+            //  this.lastElementParent = treeLevelElement;
+
+            this.applyElements(this.lastElementParent, elementObject); // Add elements to the parent
         } else {
             // ShowConstruction Reports
             this.report("Creating new branch", elementObject.tag);
@@ -210,6 +225,10 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
 
 // Adds the element to the correct parent of the element
 Boa.prototype.applyElements = function(parentsElementArray, elementObject) {
+
+    // Setting the last element on application;
+    this.lastElementParent = parentsElementArray;
+
     parentsElementArray.push(elementObject);
     return this;
 };
@@ -255,7 +274,7 @@ Boa.prototype.report = function(report, object = "") {
         if (object !== "") {
             // Push both to the report logs
             this.reports.push([report, object]);
-        // If there is not an assignment to object 
+            // If there is not an assignment to object
         } else {
             // Push just the report part to the reports
             this.reports.push([report]);
@@ -302,6 +321,97 @@ Boa.prototype.identifyAttr = function(attributeString) {
     return attributes;
 };
 
+Boa.prototype.build = function(whatToAppendTo) {
+    const elements = this.elements;
+    document.addEventListener("DOMContentLoaded", function(event) {
+        whatToAppendTo = cssSelector(whatToAppendTo);
+        appendAllElements(whatToAppendTo, elements);
+    });
+    return this;
+};
+
+function cssSelector(whatToAppendTo) {
+    return document.querySelector(whatToAppendTo);
+}
+
+function appendAllElements(whatToAppendTo, elementsToAppend) {
+    var html = cycle(elementsToAppend, elementsToAppend[0].html, 0);
+    console.log(html);
+    whatToAppendTo.append(html);
+}
+
+function cycle(elements, html, iteration) {
+    iteration++;
+    console.log(iteration, html);
+
+    // If there is more than one child
+    if (elements.length > 1) {
+        for (var i in elements) {
+            console.log('FIRST ROUNDS', i);
+            if (html && elements[i].children.length === 0) {
+                console.log(iteration, 'Firing Append FOr Loop1', elements[i]);
+
+                html.append(elements[i].html);
+            } else {
+                console.log(iteration, 'Firing Append FOr Loop2', elements[i]);
+                html.append(cycle(elements[i].children, elements[i].html, iteration));
+            }
+        }
+    } else if (!elements.children) {
+        // console.log(iteration, elements);
+        if (elements[0].children.length > 0) {
+            console.log(iteration, 'Children 1', elements[0].children);
+            console.log(iteration, "html 1", html);
+            console.log(iteration, "html element", elements[0].html);
+            return cycle(elements[0].children, elements[0].html, iteration);
+        } else {
+            console.log(iteration, 'else: ', elements[0], html);
+            console.log(iteration, 'returning', html, elements[0].html);
+            html.append(elements[0].html);
+        }
+    } else if (elements.children.length > 0) {
+        console.log(iteration, 'Children 2', elements.children);
+        console.log(iteration, 'Children 2html', elements.html);
+        console.log(iteration, "html 2", html);
+        // debugger;
+        var cycleee = cycle(elements.children, elements.html, 100);
+        console.log(iteration, "cycle", cycleee);
+        // var s = elements.html.append(elements.children[0].html);
+        html.append(cycle(elements.children, elements.html, iteration));
+    } else {
+        console.log(iteration, "Bootm");
+        return html.append(elements.html);
+    }
+    console.log(iteration, 'Returning', html);
+    return html;
+}
+
+function appendCycle(elementsToAppend, iteration, htmlAppendedElements) {
+    const spacer = '-'.repeat(iteration);
+    console.log(spacer, 'Iterarion', iteration);
+
+    iteration++;
+    const elements = elementsToAppend;
+
+    console.log(spacer, 'Elements Length', elements.length);
+    console.log(spacer, 'Elements', elements);
+    if (elements.length > 1) {
+        console.log(spacer, 'More than one element', elements);
+        console.log(spacer, 'Going Deeper');
+        appendCycle(elements[elements.length - 1], iteration);
+    } else if (elements[0]) {
+        if (elements[0].children.length > 0) {
+            appendCycle(elements[0].children, iteration);
+        } else if (elements[0].html) {
+            console.log(elements[0].html);
+        }
+    } else if (elements.children && elements.children.length > 0) {
+        console.log(spacer, 'Found Children', elements);
+        appendCycle(elements.children, iteration);
+    } else {
+        console.log(elements.html);
+    }
+}
 
 // Create .build() function that renders the elements on the page
 // should take an argument for what element it wants to find and render the items under 
