@@ -262,12 +262,12 @@ Boa.prototype.validate = function(...args) {
     if (invalidArgs.length === 0) {
         return true;
     } else {
-        this.report(`Error: Arguments given to construct must be strings \n\n${invalidArgs[0][0]} is not a ${invalidArgs[0][1]}`);
+        throw `Error: Arguments given to construct must be strings \n\n${invalidArgs[0][0]} is not a ${invalidArgs[0][1]}`
     }
 };
 
 // Report function for toggling presenting more information and to use to debug issues
-Boa.prototype.report = function(report, object = "") {
+Boa.prototype.report = function(report, object = "", error) {
     // If reporting is toggled on
     if (this.logConstruction) {
         // If there is something assigned to the object argument
@@ -322,6 +322,11 @@ Boa.prototype.identifyAttr = function(attributeString) {
 };
 
 Boa.prototype.build = function(whatToAppendTo) {
+
+    // Error handling (to be improved with designators)
+    if (!whatToAppendTo || typeof(whatToAppendTo) !== "string") { 
+        throw 'Error: Attempted to build BOA dom without designating a html element to build under. Please add element as first and only argument of .build("elementToAttachTo")';
+    }
     const elements = this.elements;
     document.addEventListener("DOMContentLoaded", function(event) {
         whatToAppendTo = cssSelector(whatToAppendTo);
@@ -337,6 +342,7 @@ function cssSelector(whatToAppendTo) {
 function appendAllElements(whatToAppendTo, elementsToAppend) {
     var html = cycle(elementsToAppend, elementsToAppend[0].html, 0);
     console.log(html);
+    console.log(whatToAppendTo);
     whatToAppendTo.append(html);
 }
 
