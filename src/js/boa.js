@@ -141,7 +141,7 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
                 treeLevelElement = treeLevelElement.children[treeLevelElement.children.length - 1] || treeLevelElement.children;
 
                 // ShowConstruction Report
-                this.report(`Progressing down tree: (Level: ${i}) - target at level:`, treeLevelElement);
+                this.report(`Progressing down tree: (Level: ${i}) (a) - target at level:`, treeLevelElement);
 
                 // Finding the parent of the element  
                 // This is used for creating element siblings later on
@@ -176,10 +176,11 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
             for (var i = 0; i < this.treeLevel; i++) {
 
                 // Get the array of children in order to push element into array
-                treeLevelElement = treeLevelElement.children;
+                treeLevelElement = treeLevelElement.children || treeLevelElement[treeLevelElement.length-1].children;
 
                 // ShowConstruction Report
-                this.report(`Progressing down tree: (Level: ${i}) - target at level:`, treeLevelElement);
+                this.report(`Progressing down tree: (Level: ${i}) (b) - target at level:`, treeLevelElement);
+                this.report(`Progressing down tree: (Level: ${i}) (b) - children at level:`, treeLevelElement.children);
 
 
                 // Finding the parent of the element  

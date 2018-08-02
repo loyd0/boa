@@ -18,12 +18,15 @@ console.log('Working');
 // Number Test
 
 
-const numberTest = boa
-.construct('p', 'class=thisIsAClass', '1')
-.down.construct('p', 'id=2', '2')
-.down.construct('p', '', '3')
-.para.construct('span', '', '3b')
-.up.construct('span', '', '2b').build();
+const numberTest = boa.showConstruction
+    .construct('div', 'class=box red parent', 'Parent')
+        .down.construct('div', 'class=box green child ', 'Child')
+            .down.construct('div', 'class=box blue gran-child', 'Gran-Child')
+                .down.construct('div', 'class=box blue', 'Gran-Gran-Child ')
+            .up.construct('div', 'class=box green child', 'Child2')
+            .para.construct('div', 'class=box green child', 'Child 3')
+        .up.construct('div', 'class=box green child', 'Child 4')
+            .down.construct('div', 'class=box blue gran-child', 'Gran-Child3').build("body");
 
 
 

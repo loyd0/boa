@@ -1,0 +1,39 @@
+.box { 
+    min-width: 30px;
+    min-height: 30px;
+    display: inline-block;
+    padding: 10px;
+    margin: 5px;
+} 
+
+.parent {
+    min-height: 60px;
+}
+
+.child {
+    min-height: 50px;
+}
+
+.gran-child {
+    min-height: 40px;
+}
+
+.red {
+    background-color: rgba(255, 0, 0, 0.264);
+}
+
+.blue {
+    background-color: rgba(0, 0, 255, 0.216);
+}
+
+.green {
+    background-color: rgba(0, 128, 0, 0.278); 
+}
+
+.yellow {
+    background-color: rgba(255, 255, 0, 0.237);
+}
+
+.black {
+    background-color: rgba(0, 0, 0, 0.312);
+}
