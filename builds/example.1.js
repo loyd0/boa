@@ -25,6 +25,7 @@ const numberTest = boa.showConstruction
                 .down.construct('div', 'class=box blue', 'Gran-Gran-Child ')
             .up.construct('div', 'class=box green child', 'Child2')
             .para.construct('div', 'class=box green child', 'Child 3')
+            .para.construct('div', 'class=box green child', 'Child 4')
         .up.construct('div', 'class=box green child', 'Child 4')
             .down.construct('div', 'class=box blue gran-child', 'Gran-Child3').build("body");
 

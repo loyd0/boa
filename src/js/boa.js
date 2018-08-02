@@ -1,5 +1,5 @@
 /* jshint esversion: 6 */
-/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 80 */
 /*global define */
 
 "use strict";
@@ -92,7 +92,8 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
 
     // Only proceeds if the validations of the arguments are correct (see validation function)
     if (this.validate([tag, "string"], [attributes, "string"], [content, "string"])) {
-        // Create the variables required from the arguments 
+       
+        // Create the variables required from the arguments
         let element = this.createHTMLTag(tag); // Create the element tag
         let elementAttributes = this.identifyAttr(attributes); // Parse the attributes
         let htmlContent = this.createContent(content); // Create the text node
@@ -107,7 +108,7 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
         element.append(htmlContent);
 
         // Create the Boa element object from all the information that has been passed to it
-        var elementObject = this.createElementObject(tag, elementAttributes, content, element);
+        let elementObject = this.createElementObject(tag, elementAttributes, content, element);
 
         // ShowConstruction reports
         this.report('--------------------NEW ELEMENT------------------------');
@@ -143,7 +144,7 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
                 // ShowConstruction Report
                 this.report(`Progressing down tree: (Level: ${i}) (a) - target at level:`, treeLevelElement);
 
-                // Finding the parent of the element  
+                // Finding the parent of the element
                 // This is used for creating element siblings later on
                 if (i === this.treeLevel - 2) {
                     this.report("Parent of element:", treeLevelElement); // Show construction report
@@ -183,7 +184,7 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
                 this.report(`Progressing down tree: (Level: ${i}) (b) - children at level:`, treeLevelElement.children);
 
 
-                // Finding the parent of the element  
+                // Finding the parent of the element
                 // This is used for creating element siblings later on
                 if (i === this.treeLevel - 2) {
                     this.report("Parent of element:", treeLevelElement); // Show construction report
@@ -233,7 +234,7 @@ Boa.prototype.applyElements = function(parentsElementArray, elementObject) {
     return this;
 };
 
-// Creates the element object 
+// Creates the element object
 Boa.prototype.createElementObject = function(tag, elementAttributes, content, html) {
     return {
         tag: tag,
@@ -317,7 +318,7 @@ Boa.prototype.identifyAttr = function(attributeString) {
         attributes = false;
     }
 
-    // Returns attributes object or false 
+    // Returns attributes object or false
     return attributes;
 };
 
@@ -353,19 +354,19 @@ Boa.prototype.build = function(whatToAppendTo) {
     return this;
 };
 
+
+// Function to determine whether the DOM has loaded
+// Returns a promise
 Boa.prototype.domLoad = function() {
     return new Promise(resolve => {
         document.addEventListener("DOMContentLoaded", function(event) {
             resolve("Dom Loaded");
-            // setTimeout(() => {
-            //     resolve('resolved');
-            // }, 2000);
         });
     })
 }
 
 
-
+// Function that awaits the domLoad complete and the initiates the appending of elements
 Boa.prototype.loadDOM = async function(elements, whatToAppendTo) {
     var result = await this.domLoad();
     if (result) {
@@ -379,99 +380,88 @@ Boa.prototype.cssSelector = function(whatToAppendTo) {
     return document.querySelector(whatToAppendTo);
 }
 
-// 
 
+// Appends the elements to the HTML
 Boa.prototype.appendAllElements = function(whatToAppendTo, elementsToAppend) {
-    var html = cycle(elementsToAppend, elementsToAppend[0].html, 0);
-    console.log(html);
-    console.log(whatToAppendTo);
+    var html = this.buildHTMLElementNodeTree(elementsToAppend, elementsToAppend[0].html, 0);
     whatToAppendTo.append(html);
 }
 
-function cycle(elements, html, iteration) {
-    iteration++;
-    console.log(iteration, html);
 
-    // If there is more than one child
+// Recursive function to build out the HTML element node tree 
+// Determines the iteration depth by the number of children that the element has 
+// Returns the element tree
+Boa.prototype.buildHTMLElementNodeTree = function(elements, html, iteration) {
+
+    // ShowConstruction reports
+    this.report(`Iteration: ${iteration}: ---- NEW ELEMENT ITERATION -----`);
+    this.report('Building this HTML ', html);
+
+
+    iteration++; // Increasing the iterator
+
+    // If there is more than one element
     if (elements.length > 1) {
         for (var i in elements) {
-            console.log('FIRST ROUNDS', i);
             if (html && elements[i].children.length === 0) {
-                console.log(iteration, 'Firing Append FOr Loop1', elements[i]);
+                // ShowConstruction Reports
+                this.report(`Iteration: ${iteration}: Element has no children:`, elements[i]);
 
+                // Append the element to the previous one, if there are no children
                 html.append(elements[i].html);
             } else {
-                console.log(iteration, 'Firing Append FOr Loop2', elements[i]);
-                html.append(cycle(elements[i].children, elements[i].html, iteration));
+                // ShowConstruction Reports
+                this.report(`Iteration: ${iteration}: Element has child elements:`, elements[i]);
+
+                // If there are children, then pass in the HTML and crate the children to be appended to it
+                // This recursively calls the same function inside itself
+                html.append(this.buildHTMLElementNodeTree(elements[i].children, elements[i].html, iteration));
             }
         }
-    } else if (!elements.children) {
-        // console.log(iteration, elements);
+    } else if (!elements.children) { // If there is one element and an array is passed
+
+        // If there are any children
         if (elements[0].children.length > 0) {
-            console.log(iteration, 'Children 1', elements[0].children);
-            console.log(iteration, "html 1", html);
-            console.log(iteration, "html element", elements[0].html);
-            return cycle(elements[0].children, elements[0].html, iteration);
-        } else {
-            console.log(iteration, 'else: ', elements[0], html);
-            console.log(iteration, 'returning', html, elements[0].html);
+
+            // ShowConstruction report
+            this.report(`Iteration: ${iteration}: Element has at least one child:`, elements[0].children);
+            this.report(`Iteration: ${iteration}: Elements HTML:`, elements[0].html);
+            this.report(`Iteration: ${iteration}: HTML (to append to):`, html);
+
+            return this.buildHTMLElementNodeTree(elements[0].children, elements[0].html, iteration);
+
+        } else { // There are no children
+
+            // ShowConstruction Reports
+            this.report(`Iteration: ${iteration}: Element has no children: (should = empty array)`, elements[0].children);
+
+            // Append the elements html as there are no children to continue down the tree with
             html.append(elements[0].html);
         }
-    } else if (elements.children.length > 0) {
-        console.log(iteration, 'Children 2', elements.children);
-        console.log(iteration, 'Children 2html', elements.html);
-        console.log(iteration, "html 2", html);
-        // debugger;
-        var cycleee = cycle(elements.children, elements.html, 100);
-        console.log(iteration, "cycle", cycleee);
-        // var s = elements.html.append(elements.children[0].html);
-        html.append(cycle(elements.children, elements.html, iteration));
-    } else {
-        console.log(iteration, "Bootm");
+    } else if (elements.children.length > 0) { // If there are children and an object is passed
+
+        // ShowConstruction report
+        this.report(`Iteration: ${iteration}: Element has at least one child:`, elements.children);
+        this.report(`Iteration: ${iteration}: Elements HTML:`, elements.html);
+        this.report(`Iteration: ${iteration}: HTML (to append to):`, html);
+
+        // Iterate through the children recursively
+        html.append(this.buildHTMLElementNodeTree(elements.children, elements.html, iteration));
+    } else { // If there are no children and object passed
+        this.report(`Iteration: ${iteration}: Element has no children: (should = empty array)`, elements.children);
+
+        // Append the html to the rest of the html
         return html.append(elements.html);
     }
-    console.log(iteration, 'Returning', html);
+
+    // ShowConstruction report
+
+    this.report(`Iteration: ${iteration}: Completed building this HTML this iteration`, html);
+    this.report(`Iteration: ${iteration}: ---- RETURNING -----`);
+
     return html;
 }
 
-function appendCycle(elementsToAppend, iteration, htmlAppendedElements) {
-    const spacer = '-'.repeat(iteration);
-    console.log(spacer, 'Iterarion', iteration);
-
-    iteration++;
-    const elements = elementsToAppend;
-
-    console.log(spacer, 'Elements Length', elements.length);
-    console.log(spacer, 'Elements', elements);
-    if (elements.length > 1) {
-        console.log(spacer, 'More than one element', elements);
-        console.log(spacer, 'Going Deeper');
-        appendCycle(elements[elements.length - 1], iteration);
-    } else if (elements[0]) {
-        if (elements[0].children.length > 0) {
-            appendCycle(elements[0].children, iteration);
-        } else if (elements[0].html) {
-            console.log(elements[0].html);
-        }
-    } else if (elements.children && elements.children.length > 0) {
-        console.log(spacer, 'Found Children', elements);
-        appendCycle(elements.children, iteration);
-    } else {
-        console.log(elements.html);
-    }
-}
-
-// Create .build() function that renders the elements on the page
-// should take an argument for what element it wants to find and render the items under 
-// Should function life the jquery selector except without the $ 
-// .build('#boa')
-// .build('.boa')
-// .build('body > span')
-// .build('html')
-
-// Create .showConstruction()
-// This should engage all the console logs to track the progress of element creation
-// Create a function that checks the value of .showConstruction and then add the text to that function for it to log out
 
 // Create some logic that allows boa.construct('span', 'content') without the need for the attribute argument
 
