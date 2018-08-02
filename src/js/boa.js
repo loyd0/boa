@@ -176,7 +176,7 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
             for (var i = 0; i < this.treeLevel; i++) {
 
                 // Get the array of children in order to push element into array
-                treeLevelElement = treeLevelElement.children || treeLevelElement[treeLevelElement.length-1].children;
+                treeLevelElement = treeLevelElement.children || treeLevelElement[treeLevelElement.length - 1].children;
 
                 // ShowConstruction Report
                 this.report(`Progressing down tree: (Level: ${i}) (b) - target at level:`, treeLevelElement);
@@ -206,7 +206,6 @@ Boa.prototype.construct = function(tag, attributes, content = "") {
             // ShowConstruction Report
             this.report("Nesting as sibling of element:", elementObject.tag);
             this.report("Using this parent to nest as sibling:", this.lastElementParent);
-            console.log("last element parent", this.lastElementParent);
 
             // Tracking parents here
             //  this.lastElementParent = treeLevelElement;
@@ -322,25 +321,67 @@ Boa.prototype.identifyAttr = function(attributeString) {
     return attributes;
 };
 
+
+// Function to build out the html and attach it to the DOM
 Boa.prototype.build = function(whatToAppendTo) {
 
-    // Error handling (to be improved with designators)
-    if (!whatToAppendTo || typeof(whatToAppendTo) !== "string") { 
+    // ShowConstruction Reports
+    this.report('--------------------STARTING BUILD------------------------');
+    this.report('Appending to: ', whatToAppendTo);
+
+    // Error handling - there has to be a string entered
+    if (!whatToAppendTo || typeof(whatToAppendTo) !== "string") {
         throw 'Error: Attempted to build BOA dom without designating a html element to build under. Please add element as first and only argument of .build("elementToAttachTo")';
     }
+
+    // Retrieves the elements stored in the boa class
     const elements = this.elements;
-    document.addEventListener("DOMContentLoaded", function(event) {
-        whatToAppendTo = cssSelector(whatToAppendTo);
-        appendAllElements(whatToAppendTo, elements);
-    });
+
+    // ShowConstruction Reports
+    this.report('Elements Built: ', elements);
+
+    // When the dom is loaded, it will run the functions to attach the elements to the DOM
+    // document.addEventListener("DOMContentLoaded", function(event) {
+
+    //     whatToAppendTo = Boa.cssSelector(whatToAppendTo); // find the element to append to
+
+    //     this.appendAllElements(whatToAppendTo, elements); // What to append to and what to append
+    // });
+
+    this.loadDOM(elements, whatToAppendTo);
+
     return this;
 };
 
-function cssSelector(whatToAppendTo) {
+Boa.prototype.domLoad = function() {
+    return new Promise(resolve => {
+        document.addEventListener("DOMContentLoaded", function(event) {
+            resolve("Dom Loaded");
+            // setTimeout(() => {
+            //     resolve('resolved');
+            // }, 2000);
+        });
+    })
+}
+
+
+
+Boa.prototype.loadDOM = async function(elements, whatToAppendTo) {
+    var result = await this.domLoad();
+    if (result) {
+        whatToAppendTo = this.cssSelector(whatToAppendTo); // find the element to append to
+        this.appendAllElements(whatToAppendTo, elements); // What to append to and what to append
+    }
+}
+
+// The css function to find the element that boa is to attach itself to
+Boa.prototype.cssSelector = function(whatToAppendTo) {
     return document.querySelector(whatToAppendTo);
 }
 
-function appendAllElements(whatToAppendTo, elementsToAppend) {
+// 
+
+Boa.prototype.appendAllElements = function(whatToAppendTo, elementsToAppend) {
     var html = cycle(elementsToAppend, elementsToAppend[0].html, 0);
     console.log(html);
     console.log(whatToAppendTo);
