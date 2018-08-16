@@ -7,7 +7,7 @@
 // Boa class object
 // Contains all the functions and the data about that particular set of elements that have been created
 // To use initiate a new instance of the class for each section of elements you want to create
-// Use .contruct('tag', 'attributes=whateverAttribute', 'internal text content') to create an element
+// Use .contruct('tag', '.classes # otherAttributes=whateverAttribute', 'internal text content') to create an element
 // Use .down, .up and .para in order to determine the relation between elements
 // .down nests below
 // .up becomes a sibling of the parent
@@ -34,21 +34,27 @@ class Boa {
                 +
                 /(?= [\w\-]+=|$)/.source, // Look ahead to find the next attribute, or the end of the line and close the group
                 'g'), // Global flag enabled
-            classRegex: new RegExp(/(?: )(\.[\w-_]+)/.source, 'g'),
-            idRegex: new RegExp(/(?: )(#[\w-_]+)/.source, 'g'),
+            classRegex: new RegExp(/(?: |^)(\.)([\w-_]+)/.source, 'g'),
+            idRegex: new RegExp(/(?: |^)(\#)([\w-_]+)/, 'g'),
             styleRegex: new RegExp(/(style)(?:=)/.source //Find a style tag, if there is one
-            +
-            /(\w[\w: ;\-\/\.]+)/.source // Locate the attributes it wants to set
-            +
-            /(?= [\w\-]+=|$)/.source, // Look ahead to find the end of the string or the next attribute
-            'g'),
+                +
+                /(\w[\w: ;\-\/\.]+)/.source // Locate the attributes it wants to set
+                +
+                /(?= [\w\-]+=|$)/.source, // Look ahead to find the end of the string or the next attribute
+                'g'),
             singularAttrRegex: new RegExp(/([\w\-]+)/.source // Group to capture the attribute accepts -
                 +
                 /(?:= ?)/.source // Non-capturing group to identify the =
                 +
                 /([\w\-\/\.\;\:\(\)]+)/.source, // Group to capture the attribute values at the end, stops with a space
+                'g'),
+            otherStylesRegex: new RegExp(/([\w\-]+)(?:= ?)/.source +
+                /([\w\-\/\.\;\:\(\)]+)/.source, // Picks up the other attributes that are left
                 'g')
         };
+
+        // All the regexes used to iterate through the string and extract the attributes of the HTML element
+        this.stringParsingRegexes = [this.regexes.classRegex, this.regexes.idRegex, this.regexes.styleRegex, this.regexes.otherStylesRegex];
 
         // Tracks the tree level depth in element creation
         this.treeLevel = 0;
@@ -311,14 +317,41 @@ Boa.prototype.createHTMLTag = function(tag) {
 
 // Identifies the attributes from the attributesString it is given
 Boa.prototype.identifyAttr = function(attributeString) {
+
     // Create object to store attributes
     let attributes = {};
 
-    // Assign the correct regex from the regexes object
-    const regex = this.regexes.attrRegex;
 
-    // Test to see if there are attributes in the attributeString
-    if (regex.test(attributeString)) {
+    // Iterate through the regexes used to parse the attributes string
+    // This could be modified later to include other regexes which would then support other parsing features
+    for (var i = 0; i < this.stringParsingRegexes.length; i++) {
+
+        // ShowConstruction Report
+        this.report('Regexes: Beginning scan of string');
+
+        // Scan the string with the different regexes in order to pull out the relevant data
+        const results = this.regexExtraction(this.stringParsingRegexes[i], attributeString, attributes);
+
+        // Update the string used in the next iteration in case it is modified by the function
+        attributeString = results[0];
+
+        // Update the attributes results
+        attributes = results[1];
+
+        // Just logging the final results
+        if (i === this.stringParsingRegexes.length - 1) {
+
+            // ShowConstruction Report
+            this.report('Attributes found: ', attributes);
+        }
+    }
+
+    // Returns attributes object or false
+    return attributes;
+};
+
+Boa.prototype.regexExtraction = function(regex, string, attributes) {
+    if (regex.test(string)) {
 
         // Resetting the last index for the iterations through the attributeString
         regex.lastIndex = 0;
@@ -326,18 +359,105 @@ Boa.prototype.identifyAttr = function(attributeString) {
         //  Collecting the attributes
         let regexAttr;
 
+
+        // ShowConstruction Report
+        this.report('Attribute String Regex Match: ', string.match(regex));
+
         // Iterating through the attributeString and finding the attributes
         // Pushes them into the attributes.name = data
-        while ((regexAttr = regex.exec(attributeString)) !== null) {
-            attributes[regexAttr[1]] = regexAttr[2];
+        while ((regexAttr = regex.exec(string)) !== null) {
+
+            // ShowConstruction Report
+            this.report('This iteration the regex found: ', regexAttr);
+
+            if (foundClass(regexAttr)) {
+
+                // ShowConstruction Report
+                this.report('---> This has been designated as a class');
+                this.report('-----> Adding to classes');
+
+                // If there has been classes already found then add them to the end of the string
+                if (attributes.class !== undefined) {
+                    attributes.class = attributes.class + " " + regexAttr[2];
+
+                // If no classes have been found yet then add the first one
+                } else {
+                    // ShowConstruction Report
+                    this.report('---> This has been designated as a class');
+                    this.report('-----> Adding first class');
+
+                    attributes.class = regexAttr[2];
+                }
+            } else if (foundId(regexAttr)) {
+
+                // ShowConstruction Report
+                this.report('---> This has been designated as an id');
+
+                attributes.id = regexAttr[2];
+            } else if (foundStyle(regexAttr)) {
+
+                // ShowConstruction Report
+                this.report('---> This has been designated as a style');
+
+                attributes.style = regexAttr[2];
+
+                // Remove the styles from the string;
+                string = string.replace(regexAttr[0], '');
+            } else if (foundOtherAttribute(regexAttr)) {
+
+                // ShowConstruction Report
+                this.report('---> This has been designated as an other style');
+                attributes[regexAttr[1]] = regexAttr[2];
+            }
         }
     } else {
-        attributes = false;
+        return [string, attributes];
     }
 
-    // Returns attributes object or false
-    return attributes;
-};
+    // If there is a regex result, and it is a class return true
+    function foundClass(regexResult) {
+        if (regexResult && regexResult[1] === ".") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // If there is a regex result, and it is an id return true
+    function foundId(regexResult) {
+        if (regexResult && regexResult[1] === "#") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // If there is a regex result, and it is a style return true
+    function foundStyle(regexResult) {
+        if (regexResult && regexResult[1] === "style") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // If there is a regex result, and it is a class return true
+    function foundOtherAttribute(regexResult) {
+        if (regexResult && regexResult[1] === "class") {
+            throw "Error: Found 'class=' Please use '.' notation instead";
+        } else if (regexResult && regexResult[1] === "id") {
+            throw "Error: Found 'id=' Please use '#' notation instead";
+        } else if (regexResult && regexResult[1] === "style") {
+            // Ignores the extra styles
+            return false;
+        } else if (regexResult) {
+            return true;
+        }
+    }
+
+    // Return an array of the string and the attributes
+    return [string, attributes];
+}
 
 
 // Function to build out the html and attach it to the DOM
@@ -358,14 +478,7 @@ Boa.prototype.build = function(whatToAppendTo) {
     // ShowConstruction Reports
     this.report('Elements Built: ', elements);
 
-    // When the dom is loaded, it will run the functions to attach the elements to the DOM
-    // document.addEventListener("DOMContentLoaded", function(event) {
-
-    //     whatToAppendTo = Boa.cssSelector(whatToAppendTo); // find the element to append to
-
-    //     this.appendAllElements(whatToAppendTo, elements); // What to append to and what to append
-    // });
-
+    // Awaits the loading of the dom before appending elements
     this.loadDOM(elements, whatToAppendTo);
 
     return this;
@@ -393,7 +506,7 @@ Boa.prototype.loadDOM = async function(elements, whatToAppendTo) {
 }
 
 // The css function to find the element that boa is to attach itself to
-Boa.prototype.cssSelector = function(whatToAppendTo) {
+Boa.prototype.cssSelector = function(whatToAppendTo) {   
     return document.querySelector(whatToAppendTo);
 }
 
@@ -478,120 +591,3 @@ Boa.prototype.buildHTMLElementNodeTree = function(elements, html, iteration) {
 
     return html;
 }
-
-
-// Create some logic that allows boa.construct('span', 'content') without the need for the attribute argument
-
-// Content adding to created elements
-
-// Modifying elements post creation 
-// Classes, IDs, src, content bare minimum
-
-
-
-// var string = ".box .green #child src=someimage/orsomething/here.jpg style=width: 40px; height: 50px class=test"
-// var classRegex = new RegExp(/(?: |^)(\.)([\w-_]+)/, 'g');
-// var idRegex = new RegExp(/(?: |^)(\#)([\w-_]+)/, 'g');
-// var styleRegex = new RegExp(/(style)(?:=)(\w[\w: ;\-\/\.]+)(?= [\w\-]+=|$)/, 'g');
-// var otherStylesRegex = new RegExp(/([\w\-]+)(?:= ?)([\w\-\/\.\;\:\(\)]+)/, 'g');
-// var regexes = [classRegex, idRegex, styleRegex, otherStylesRegex];
-// let attributes = {};
-
-// string = ".box .green #child src=someimage/orsomething/here.jpg .go style=width: 40px; height: 50px class=test id=dss"
-
-
-
-// function regexExtraction(regex, string) {
-
-//     if (regex.test(string)) {
-
-//         // Resetting the last index for the iterations through the attributeString
-//         regex.lastIndex = 0;
-
-//         //  Collecting the attributes
-//         let regexAttr;
-//         console.log('Regex Match:', string.match(regex))
-//         // Iterating through the attributeString and finding the attributes
-//         // Pushes them into the attributes.name = data
-//         while ((regexAttr = regex.exec(string)) !== null) {
-//             console.log('Regex Attr:', regexAttr)
-
-//             if (foundClass(regexAttr)) {
-//                 if (attributes.class !== undefined) {
-//                     attributes.class = attributes.class + " " + regexAttr[2];
-//                 } else {
-//                     attributes.class = regexAttr[2];
-//                 }
-//             } else if (foundId(regexAttr)) {
-//                 attributes.id = regexAttr[2];
-//             } else if (foundStyle(regexAttr)) {
-//                 attributes.style = regexAttr[2];
-//                 string = string.replace(regexAttr[0], '');
-//             } else if (foundOtherAttribute(regexAttr)) {
-//                 attributes[regexAttr[1]] = regexAttr[2];
-//             }
-//             //          string = string.replace(regexAttr[0], '');
-//             console.log('String:', string);
-//         }
-//     } else {
-//         attributes = false;
-//     }
-
-//     return string;
-// }
-
-// function foundClass(regexResult) {
-//     if (regexResult && regexResult[1] === ".") {
-//         console.log("Found Class");
-//         return true;
-//     }
-// }
-
-
-// function foundId(regexResult) {
-//     if (regexResult && regexResult[1] === "#") {
-//         console.log("Found Id");
-//         return true;
-//     }
-// }
-
-
-// function foundStyle(regexResult) {
-//     if (regexResult && regexResult[1] === "style") {
-//         console.log("Found Style");
-//         return true;
-//     }
-// }
-
-
-// function foundOtherAttribute(regexResult) {
-//     console.log('Finding Other Attribues');
-//     if (regexResult && regexResult[1] === "class") {
-//         console.log("Error: Found Class; Please use '.' notation.");
-//         return false;
-//     } else if (regexResult && regexResult[1] === "id") {
-//         console.log("Error: Found Id; Please use '#' notation.");
-//         return false;
-//     } else if (regexResult && regexResult[1] === "style") {
-//         console.log("Not counting style");
-//         return false;
-//     } else if (regexResult) {
-//         return true;
-//     }
-// }
-
-
-// regexes.forEach(function(regex, index) {
-//     console.log('Running');
-//     console.log(string);
-
-//     string = regexExtraction(regex, string);
-//     if (index === regexes.length - 1) {
-//         console.log(attributes)
-//     }
-// });
-
-// regexExtraction(classRegex, string);
-// regexExtraction(idRegex, string);
-// regexExtraction(styleRegex, string);
-// regexExtraction(otherStylesRegex, string);

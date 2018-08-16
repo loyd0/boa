@@ -11,6 +11,8 @@ const sass = require('gulp-sass');
 const uglify = require('gulp-uglify');
 const pump = require('pump');
 const babel = require('gulp-babel');
+const rename = require("gulp-rename");
+
 
 
 // Web server
@@ -46,7 +48,7 @@ gulp.task('watch:html', function() {
 
 gulp.task('moveHTML', function() {
     return gulp.src('index.test.html')
-    .pipe(gulp.dest('public'));
+        .pipe(gulp.dest('public'));
 });
 
 // gulp.task('js', function() {
@@ -71,13 +73,16 @@ gulp.task('watch:js', function() {
 });
 
 gulp.task('jsToEs5', function() {
- return gulp.src('src/js/*.js')
-     .pipe(babel({
-         presets: ['env']
-     }))
-     .pipe(gulp.dest('public/js'));
+    return gulp.src('src/js/*.js')
+        .pipe(babel({
+            presets: ['env']
+        }))
+        .pipe(rename({
+            suffix: '.min'
+        }))
+        .pipe(gulp.dest('public/js'));
 });
-   
+
 
 gulp.task('serve', ['watch:css', 'watch:html', 'watch:js'], function() {
     return gulp.src('public')

@@ -17,5 +17,7 @@
     "node-sass": "^4.9.0",
     "pump": "^3.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "gulp-rename": "^1.4.0"
+  }
 }

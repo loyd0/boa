@@ -18,51 +18,29 @@ console.log('Working');
 // Number Test
 
 
-const numberTest = boa.showConstruction
-    .construct('div', 'class=box red parent', 'Parent')
-    .down.construct('div', 'class=box green child ', 'Child')
-    .down.construct('div', 'class=box blue gran-child', 'Gran-Child')
-    .down.construct('div', 'class=box blue', 'Gran-Gran-Child ')
-    .up.construct('div', 'class=box green child', 'Child2')
-    .para.construct('div', 'class=box green child', 'Child 3')
-    .para.construct('div', 'class=box green child', 'Child 4')
-    .up.construct('div', 'class=box green child', 'Child 4')
-    .down.construct('div', 'class=box blue gran-child', 'Gran-Child3').build("body");
+// const numberTest = boa.showConstruction
+//     .construct('div', 'class=box red parent', 'Parent')
+//     .down.construct('div', 'class=box green child ', 'Child')
+//     .down.construct('div', 'class=box blue gran-child', 'Gran-Child')
+//     .down.construct('div', 'class=box blue', 'Gran-Gran-Child ')
+//     .up.construct('div', 'class=box green child', 'Child2')
+//     .para.construct('div', 'class=box green child', 'Child 3')
+//     .para.construct('div', 'class=box green child', 'Child 4')
+//     .up.construct('div', 'class=box green child', 'Child 4')
+//     .down.construct('div', 'class=box blue gran-child', 'Gran-Child3').build("body");
+const exampleTest = boa
+    .construct('div', '.box .red .parent', 'Parent')
+    .down.construct('div', '.box .green .child ', 'Child')
+    .down.construct('div', '.box .blue .gran-child', 'Gran-Child')
+    .down.construct('div', '.box .blue', 'Gran-Gran-Child ')
+    .up.construct('div', '.box .green .child #testChild style=color: blue; border-radius: 100px; src=path/topath/image.ph onclick=logItOut()', 'Child 2')
+    .para.construct('div', '.box .green .child', 'Child 3')
+    .para.construct('div', '.box .green .child', 'Child 4')
+    .up.construct('div', '.box .green .child', 'Child 4')
+    .down.construct('div', '.box .blue .gran-child', 'Gran-Child3').build("body");
 
 
-// function extractAttributes() {
 
-//     findClasses(object, string,
-//         findIds(object, string,
-//             findOtherAttr(object, string, 
-//                 assignContent(string))
-//         )
-//     );
-// }
-
-// function findClasses(object, string, callback) {
-
-//     return callback(object, string, findIds);
-// }
-// function findIds(object, string, callback) {
-//     return callback(object, string, callback)
-// }
-// function findOtherAttr(object, string, callback) {
-//     return callback(object, string, callback)
-// }
-// function assignContent(object, string) {
-//     return [object, string]
-
-// }
-
-// const p = boa
-//     .construct('p', 'class=ThisIsAclass this-another-class id=iIF', 'TEST')
-//     // .construct('p', 'class=ThisIsAclass this-another-class', 'TEST')
-//     .down.construct('span', 'class=exampleSpan id=child', 'ing')
-//     .para.construct('span', 'class=ts', '!!')
-//     .down.construct('div', 'class=examplediv', 'DIV1')
-//     .down.construct('div', 'class=examplediv', 'DIV2')
-//     .down.construct('div', 'class=examplediv', 'DIV3')
-//     .build('body');
-
-// console.log(numberTest.elements);
+function logItOut() {
+    console.log('You clicked me');
+}
