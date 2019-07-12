@@ -13,7 +13,6 @@
     "gulp-clean-css": "^4.2.0",
     "gulp-sass": "^4.0.2",
     "gulp-uglify": "^3.0.2",
-    "gulp-webserver": "^0.9.1",
     "@hapi/hoek": "^8.0.2",
     "node-sass": "^4.12.0",
     "pump": "^3.0.0"
