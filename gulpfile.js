@@ -15,9 +15,6 @@ const rename = require("gulp-rename");
 
 
 
-// Web server
-const webserver = require('gulp-webserver');
-
 
 
 // Check that Gulp is working
@@ -84,11 +81,11 @@ gulp.task('jsToEs5', function() {
 });
 
 
-gulp.task('serve', ['watch:css', 'watch:html', 'watch:js'], function() {
-    return gulp.src('public')
-        .pipe(webserver({
-            port: 3000,
-            livereload: true,
-            fallback: 'index.test.html'
-        }));
-});
+// gulp.task('serve', ['watch:css', 'watch:html', 'watch:js'], function() {
+//     return gulp.src('public')
+//         .pipe(webserver({
+//             port: 3000,
+//             livereload: true,
+//             fallback: 'index.test.html'
+//         }));
+// });
